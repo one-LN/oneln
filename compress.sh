@@ -16,15 +16,16 @@ check_pv() {
 log() {
   echo "$(date +"%Y-%m-%d %H:%M:%S") $1" >> "$LOG_FILE"
 }
+
 # 压缩/解压缩脚本
 compress_decompress() {
   # 检查pv是否安装，并给出提示
   if check_pv; then
     echo "已检测到 pv 工具，将显示进度条。"
+    use_pv=true
   else
-    echo "未检测到 pv 工具，无法显示进度条。"
-    echo "建议您安装 pv 工具，可获得更直观的进度显示。"
-    echo "例如：在 Ubuntu/Debian 上，可以使用 sudo apt install pv 安装。"
+    echo "未检测到 pv 工具，无法显示 pv 进度条，将使用 Bash 内置进度条。"
+    use_pv=false
   fi
 
   # 获取用户输入
@@ -58,27 +59,38 @@ compress_decompress() {
       # 根据选择生成压缩命令
       case $format in
         "tar.gz")
-          if check_pv; then
-            tar -czf - "$source_dir" | pv | dd of="${dest_dir}/${file_or_dir_name}_${timestamp}.tar.gz"
+          if $use_pv; then
+            tar_cmd="tar -czf - $source_dir | pv | dd of=${dest_dir}/${file_or_dir_name}_${timestamp}.tar.gz"
           else
-            tar -czvf "${dest_dir}/${file_or_dir_name}_${timestamp}.tar.gz" "$source_dir"
+            tar_cmd="tar -czvf ${dest_dir}/${file_or_dir_name}_${timestamp}.tar.gz $source_dir"
           fi
           ;;
         "zip")
-          if check_pv; then
-            zip -r -${compression_level} - "$source_dir" | pv | dd of="${dest_dir}/${file_or_dir_name}_${timestamp}.zip"
+          if $use_pv; then
+            zip_cmd="zip -r -${compression_level} - $source_dir | pv | dd of=${dest_dir}/${file_or_dir_name}_${timestamp}.zip"
           else
-            zip -r -${compression_level} "${dest_dir}/${file_or_dir_name}_${timestamp}.zip" "$source_dir"
+            zip_cmd="zip -r -${compression_level} ${dest_dir}/${file_or_dir_name}_${timestamp}.zip $source_dir"
           fi
           ;;
         "bzip2")
-          if check_pv; then
-            tar -cjvf - "$source_dir" | pv | dd of="${dest_dir}/${file_or_dir_name}_${timestamp}.bz2"
+          if $use_pv; then
+            tar_cmd="tar -cjvf - $source_dir | pv | dd of=${dest_dir}/${file_or_dir_name}_${timestamp}.bz2"
           else
-            tar -cjvf "${dest_dir}/${file_or_dir_name}_${timestamp}.bz2" "$source_dir"
+            tar_cmd="tar -cjvf ${dest_dir}/${file_or_dir_name}_${timestamp}.bz2 $source_dir"
           fi
           ;;
       esac
+
+      # 执行压缩命令并显示进度条
+      echo "开始压缩..."
+      if $use_pv; then
+        eval $tar_cmd
+      else
+        eval $tar_cmd | while IFS= read -r line; do
+          echo -n "."
+        done
+        echo
+      fi
 
       if [ $? -eq 0 ]; then
         log "压缩成功：${dest_dir}/${file_or_dir_name}_${timestamp}.${format}"
@@ -96,31 +108,43 @@ compress_decompress() {
       # 自动识别压缩格式并解压
       case "$archive_file" in
         *.tar.gz)
-          if check_pv; then
-            pv "$archive_file" | tar -xz -C "$dest_dir"
+          if $use_pv; then
+            tar_cmd="pv $archive_file | tar -xz -C $dest_dir"
           else
-            tar -xzvf "$archive_file" -C "$dest_dir"
+            tar_cmd="tar -xzvf $archive_file -C $dest_dir"
           fi
           ;;
         *.zip)
-          if check_pv; then
-            pv "$archive_file" | unzip -d "$dest_dir"
+          if $use_pv; then
+            unzip_cmd="pv $archive_file | unzip -d $dest_dir"
           else
-            unzip "$archive_file" -d "$dest_dir"
+            unzip_cmd="unzip $archive_file -d $dest_dir"
           fi
           ;;
         *.bz2)
-          if check_pv; then
-            pv "$archive_file" | tar -xj -C "$dest_dir"
+          if $use_pv; then
+            tar_cmd="pv $archive_file | tar -xj -C $dest_dir"
           else
-            tar -xjvf "$archive_file" -C "$dest_dir"
+            tar_cmd="tar -xjvf $archive_file -C $dest_dir"
           fi
           ;;
         *)
           log "不支持的压缩格式：$archive_file"
           echo "不支持的压缩格式！"
+          return
           ;;
       esac
+
+      # 执行解压命令并显示进度条
+      echo "开始解压..."
+      if $use_pv; then
+        eval $tar_cmd
+      else
+        eval $tar_cmd | while IFS= read -r line; do
+          echo -n "."
+        done
+        echo
+      fi
 
       if [ $? -eq 0 ]; then
         log "解压成功：$archive_file 到 $dest_dir"
