@@ -3,7 +3,7 @@
 ### compress.sh
 欢迎使用压缩/解压工具！
 ### 使用方法
-#####Debian / Ubuntu 安装下载工具
+##### Debian / Ubuntu 安装下载工具
 ```
 apt update -y  && apt install -y curl
 ```
