@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # 配置日志文件路径
-LOG_FILE="compress_decompress.log"
+LOG_FILE="compress.log"
+MAX_LOG_LINES=10
 
 # 检查pv是否已安装
 check_pv() {
@@ -12,9 +13,14 @@ check_pv() {
   fi
 }
 
-# 记录日志
+# 记录日志并限制日志行数不超过 MAX_LOG_LINES
 log() {
   echo "$(date +"%Y-%m-%d %H:%M:%S") $1" >> "$LOG_FILE"
+  
+  # 检查日志文件行数，如果超过 MAX_LOG_LINES 则删除最早的行
+  if [ $(wc -l < "$LOG_FILE") -gt $MAX_LOG_LINES ]; then
+    tail -n $MAX_LOG_LINES "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+  fi
 }
 
 # 压缩/解压缩脚本
