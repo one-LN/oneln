@@ -50,10 +50,19 @@ log() {
 
 # 显示进度条
 show_progress() {
-  total_files=$1
-  current_file=$2
-  progress=$(( current_file * 100 / total_files ))
-  echo -ne "压缩进度：[$progress%] $current_file/$total_files\r"
+  local current=$1
+  local total=$2
+  local bar_length=40
+  local percent=$((current * 100 / total))
+  local filled=$((current * bar_length / total))
+  local unfilled=$((bar_length - filled))
+  
+  printf -v bar "%-${bar_length}s" " "
+  printf -v bar "[%s>%${unfilled}s] %d%% (%d/%d)\r" "${bar:0:filled}" "" "$percent" "$current" "$total"
+  
+  if [ "$current" -eq "$total" ]; then
+    echo -e "\n任务完成！"
+  fi
 }
 
 # 压缩/解压缩脚本
@@ -128,7 +137,7 @@ compress_decompress() {
         find "$source_dir" -type f | while read -r file; do
           ((current_file++))
           zip -r -${compression_level} "${dest_dir}/${file_or_dir_name}_${timestamp}.zip" "$file" > /dev/null
-          show_progress "$total_files" "$current_file"
+          show_progress "$current_file" "$total_files"
         done
         echo -e "\n压缩完成！"
         log "压缩成功：${dest_dir}/${file_or_dir_name}_${timestamp}.zip"
@@ -217,17 +226,3 @@ compress_decompress() {
       if [ $? -eq 0 ]; then
         log "解压成功：$archive_file 到 $dest_dir"
         echo "解压完成！"
-      else
-        log "解压失败：$archive_file"
-        echo "解压失败，请检查日志获取详细信息。"
-      fi
-      ;;
-    *)
-      log "输入无效：$option"
-      echo "输入无效，请重新输入！"
-      ;;
-  esac
-}
-
-# 调用主函数
-compress_decompress
