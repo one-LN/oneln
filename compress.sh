@@ -226,3 +226,17 @@ compress_decompress() {
       if [ $? -eq 0 ]; then
         log "解压成功：$archive_file 到 $dest_dir"
         echo "解压完成！"
+      else
+        log "解压失败：$archive_file"
+        echo "解压失败，请检查日志获取详细信息。"
+      fi
+      ;;
+    *)
+      log "输入无效：$option"
+      echo "输入无效，请重新输入！"
+      ;;
+  esac
+}
+
+# 调用主函数
+compress_decompress
