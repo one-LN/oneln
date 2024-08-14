@@ -74,8 +74,12 @@ show_spinner() {
 # 压缩/解压缩脚本
 compress_decompress() {
   # 检查并安装必要的工具
+  pv_installed=false
   for tool in "${!tools[@]}"; do
     check_tool "$tool" || install_tool "$tool"
+    if [ "$tool" == "pv" ] && check_tool "pv"; then
+      pv_installed=true
+    fi
   done
 
   # 获取用户输入
@@ -115,45 +119,72 @@ compress_decompress() {
       # 获取文件名或目录名作为前缀
       base_name=$(basename "$source")
 
-      # ZIP 压缩进度条处理
-      if [[ $format == "zip" ]]; then
-        echo "开始压缩..."
-        total_files=$(find "$source" -type f | wc -l)
-        current_file=0
-
-        ( # 手动处理进度条
-          find "$source" -type f | while read -r file; do
-            ((current_file++))
-            zip -r -${compression_level} "${dest_dir}/${base_name}_${timestamp}.zip" "$file" > /dev/null
-          done
-        ) &
-        show_spinner $!
-        echo -e "\n压缩完成！"
-        log "压缩成功：${dest_dir}/${base_name}_${timestamp}.zip"
-      else
-        # 处理 tar.gz 和 bzip2
+      if [[ $pv_installed == true ]]; then
+        # 使用 pv 显示进度条
         case $format in
           "tar.gz")
-            tar_cmd="tar -czf ${dest_dir}/${base_name}_${timestamp}.tar.gz -C $(dirname "$source") $(basename "$source")"
+            tar_cmd="tar -czf - -C $(dirname \"$source\") $(basename \"$source\") | pv > ${dest_dir}/${base_name}_${timestamp}.tar.gz"
             ;;
           "bzip2")
-            tar_cmd="tar -cjf ${dest_dir}/${base_name}_${timestamp}.bz2 -C $(dirname "$source") $(basename "$source")"
+            tar_cmd="tar -cjf - -C $(dirname \"$source\") $(basename \"$source\") | pv > ${dest_dir}/${base_name}_${timestamp}.bz2"
+            ;;
+          "zip")
+            total_size=$(du -sb "$source" | cut -f1)
+            zip_cmd="zip -r -${compression_level} - -q \"$source\" | pv -s $total_size > ${dest_dir}/${base_name}_${timestamp}.zip"
             ;;
         esac
 
-        # 检查 pv 是否安装并设置命令
-        if check_tool "pv"; then
-          tar_cmd="${tar_cmd} | pv"
-        fi
-
         # 执行压缩命令并显示进度条
         echo "开始压缩..."
-        if eval $tar_cmd &>/dev/null & show_spinner $!; then
+        if [[ $format == "zip" ]]; then
+          eval "$zip_cmd"
+        else
+          eval "$tar_cmd"
+        fi
+
+        if [ $? -eq 0 ]; then
           echo -e "\n压缩成功！"
           log "压缩成功：${dest_dir}/${base_name}_${timestamp}.${format}"
         else
-          echo -e "\n压缩失败！请查看日志获取详细信息。"
+          echo "压缩失败！请查看日志获取详细信息。"
           log "压缩失败：${dest_dir}/${base_name}_${timestamp}.${format}"
+        fi
+      else
+        # 使用 Spinner 显示进度条
+        if [[ $format == "zip" ]]; then
+          echo "开始压缩..."
+          total_files=$(find "$source" -type f | wc -l)
+          current_file=0
+
+          ( # 手动处理进度条
+            find "$source" -type f | while read -r file; do
+              ((current_file++))
+              zip -r -${compression_level} "${dest_dir}/${base_name}_${timestamp}.zip" "$file" > /dev/null
+            done
+          ) &
+          show_spinner $!
+          echo -e "\n压缩完成！"
+          log "压缩成功：${dest_dir}/${base_name}_${timestamp}.zip"
+        else
+          echo "开始压缩..."
+          case $format in
+            "tar.gz")
+              tar_cmd="tar -czf ${dest_dir}/${base_name}_${timestamp}.tar.gz -C $(dirname \"$source\") $(basename \"$source\")"
+              ;;
+            "bzip2")
+              tar_cmd="tar -cjf ${dest_dir}/${base_name}_${timestamp}.bz2 -C $(dirname \"$source\") $(basename \"$source\")"
+              ;;
+          esac
+
+          (eval "$tar_cmd") &
+          show_spinner $!
+          if [ $? -eq 0 ]; then
+            echo -e "\n压缩成功！"
+            log "压缩成功：${dest_dir}/${base_name}_${timestamp}.${format}"
+          else
+            echo -e "\n压缩失败！请查看日志获取详细信息。"
+            log "压缩失败：${dest_dir}/${base_name}_${timestamp}.${format}"
+          fi
         fi
       fi
       ;;
@@ -167,52 +198,73 @@ compress_decompress() {
           mkdir -p "$dest_dir"
       fi
 
-      # 自动识别压缩格式并解压
-      case "$archive_file" in
-        *.tar.gz)
-          if check_tool "pv"; then
-            tar_cmd="pv $archive_file | tar -xz -C $dest_dir"
-          else
-            tar_cmd="tar -xzvf $archive_file -C $dest_dir"
-          fi
-          ;;
-        *.zip)
-          if check_tool "unzip"; then
-            unzip_cmd="unzip $archive_file -d $dest_dir"
-          else
-            echo "未安装 unzip 工具，无法解压 ZIP 文件。"
+      if [[ $pv_installed == true ]]; then
+        case "$archive_file" in
+          *.tar.gz)
+            tar_cmd="pv \"$archive_file\" | tar -xz -C \"$dest_dir\""
+            ;;
+          *.zip)
+            unzip_cmd="pv \"$archive_file\" > $dest_dir/archive.zip && unzip $dest_dir/archive.zip -d \"$dest_dir\""
+            ;;
+          *.bz2)
+            tar_cmd="pv \"$archive_file\" | tar -xj -C \"$dest_dir\""
+            ;;
+          *)
+            log "不支持的压缩格式：$archive_file"
+            echo "不支持的压缩格式！"
             return
-          fi
-          ;;
-        *.bz2)
-          if check_tool "pv"; then
-            tar_cmd="pv $archive_file | tar -xj -C $dest_dir"
-          else
-            tar_cmd="tar -xjvf $archive_file -C $dest_dir"
-          fi
-          ;;
-        *)
-          log "不支持的压缩格式：$archive_file"
-          echo "不支持的压缩格式！"
-          return
-          ;;
-      esac
+            ;;
+        esac
 
-      # 执行解压命令并显示进度条
-      echo "开始解压..."
-      if [[ $archive_file == *.zip ]]; then
-        (unzip -o "$archive_file" -d "$dest_dir" &>/dev/null) &
-      else
-        eval $tar_cmd &>/dev/null &
-      fi
-      show_spinner $!
+        # 执行解压命令并显示进度条
+        echo "开始解压..."
+        if [[ $archive_file == *.zip ]]; then
+          eval "$unzip_cmd"
+        else
+          eval "$tar_cmd"
+        fi
 
-      if [ $? -eq 0 ]; then
-        log "解压成功：$archive_file 到 $dest_dir"
-        echo -e "\n解压完成！"
+        if [ $? -eq 0 ]; then
+          echo -e "\n解压成功！"
+          log "解压成功：$archive_file 到 $dest_dir"
+        else
+          echo -e "\n解压失败！请查看日志获取详细信息。"
+          log "解压失败：$archive_file"
+        fi
       else
-        log "解压失败：$archive_file"
-        echo -e "\n解压失败！请查看日志获取详细信息。"
+        # 使用 Spinner 显示进度条
+        echo "开始解压..."
+        case "$archive_file" in
+          *.tar.gz)
+            tar_cmd="tar -xzvf \"$archive_file\" -C \"$dest_dir\""
+            ;;
+          *.zip)
+            unzip_cmd="unzip \"$archive_file\" -d \"$dest_dir\""
+            ;;
+          *.bz2)
+            tar_cmd="tar -xjvf \"$archive_file\" -C \"$dest_dir\""
+            ;;
+          *)
+            log "不支持的压缩格式：$archive_file"
+            echo "不支持的压缩格式！"
+            return
+            ;;
+        esac
+
+        if [[ $archive_file == *.zip ]]; then
+          (eval "$unzip_cmd") &
+        else
+          (eval "$tar_cmd") &
+        fi
+        show_spinner $!
+
+        if [ $? -eq 0 ]; then
+          echo -e "\n解压成功！"
+          log "解压成功：$archive_file 到 $dest_dir"
+        else
+          echo -e "\n解压失败！请查看日志获取详细信息。"
+          log "解压失败：$archive_file"
+        fi
       fi
       ;;
     *)
