@@ -11,3 +11,7 @@ apt update -y  && apt install -y curl
 ```
 curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/compress.sh && chmod +x compress.sh && ./compress.sh
 ```
+#### 添加快捷指令
+```
+cp ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
+```
