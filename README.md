@@ -13,5 +13,5 @@ curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/compress.sh && c
 ```
 #### 添加快捷指令
 ```
-cp ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
+cp -f ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
 ```
