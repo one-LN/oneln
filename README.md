@@ -3,15 +3,19 @@
 ### compress.sh
 欢迎使用压缩/解压工具！
 ### 使用方法
-##### Debian / Ubuntu 安装下载工具
+#### Debian / Ubuntu 安装下载工具
 ```
 apt update -y  && apt install -y curl
 ```
-#### 一键脚本
+#### CentoS 安装下载工具
+```
+yun update -y  && yun install -y curl
+```
+### 一键脚本 compress.sh
 ```
 curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/compress.sh && chmod +x compress.sh && ./compress.sh
 ```
-#### 添加快捷指令
+### 一键脚本 dockers.sh
 ```
-cp -f ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
+curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/dockers.sh && chmod +x dockers.sh && ./dockers.sh
 ```
