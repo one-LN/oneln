@@ -83,7 +83,7 @@ setup_shortcut() {
     fi
 
     # 复制脚本到 /usr/local/bin 并重命名为 dockers
-     cp -f ./docker.sh /usr/local/bin/dockers > /dev/null 2>&1
+     cp -f ./dockers.sh /usr/local/bin/dockers > /dev/null 2>&1
      chmod +x /usr/local/bin/dockers
 
     echo "快捷命令 dockers 设置完成。"
