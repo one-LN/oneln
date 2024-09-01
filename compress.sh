@@ -62,28 +62,34 @@ install_tool() {
         . /etc/os-release
         case "$ID" in
             ubuntu|debian)
-                 apt-get update
+                apt-get update
                 if [ "$tool" = "rar" ] || [ "$tool" = "unrar" ]; then
                     if ! apt-get install -y unrar rar; then
                         echo "Debian/Ubuntu 官方源中未找到 $tool 包。尝试从官方网站下载安装。"
                         install_rar_from_source
                     fi
+                elif [ "$tool" = "7z" ]; then
+                    apt-get install -y p7zip-full
                 else
-                     apt-get install -y "$tool"
+                    apt-get install -y "$tool"
                 fi
                 ;;
             centos|fedora|rhel)
                 if [ "$tool" = "rar" ]; then
-                     yum install -y epel-release && yum install -y rar unrar || dnf install -y rar unrar
+                    yum install -y epel-release && yum install -y rar unrar || dnf install -y rar unrar
+                elif [ "$tool" = "7z" ]; then
+                    yum install -y p7zip || dnf install -y p7zip
                 else
-                     yum install -y "$tool" || dnf install -y "$tool"
+                    yum install -y "$tool" || dnf install -y "$tool"
                 fi
                 ;;
             arch)
                 if [ "$tool" = "rar" ]; then
-                     pacman -S --noconfirm rar
+                    pacman -S --noconfirm rar
+                elif [ "$tool" = "7z" ]; then
+                    pacman -S --noconfirm p7zip
                 else
-                     pacman -S --noconfirm "$tool"
+                    pacman -S --noconfirm "$tool"
                 fi
                 ;;
             *)
