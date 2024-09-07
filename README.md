@@ -15,7 +15,13 @@ yun update -y  && yun install -y curl
 ```
 curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/compress.sh && chmod +x compress.sh && ./compress.sh
 ```
+```一键脚本 compress.sh V6
+curl -sS -O https://gitlab.com/oneln/oneLN/-/raw/main/compress.sh && chmod +x compress.sh && ./compress.sh
+```
 ### 一键脚本 dockers.sh
 ```
 curl -sS -O https://raw.githubusercontent.com/one-LN/oneln/main/dockers.sh && chmod +x dockers.sh && ./dockers.sh
+```
+``` 一键脚本 dockers.sh V6
+curl -sS -O https://gitlab.com/oneln/oneLN/-/raw/main/dockers.sh && chmod +x dockers.sh && ./dockers.sh
 ```
