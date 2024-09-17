@@ -236,7 +236,6 @@ case $option in
         else
             echo "卸载已取消。"
         fi
-        else
         ;;
     *)
         echo "无效选项，退出脚本。"
