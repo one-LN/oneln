@@ -1,31 +1,19 @@
 #!/bin/bash
 
-CheckFirstRun_false() {
-	if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
-		UserLicenseAgreement
-	fi
+setup_shortcut() {
+    local script_path="$(readlink -f "$0")"
+    local link_path="/usr/local/bin/dockers"
+
+    if [ ! -L "$link_path" ] || [ "$(readlink -f "$link_path")" != "$script_path" ]; then
+        ln -sf "$script_path" "$link_path"
+        chmod +x "$link_path"
+        echo "快捷命令 dockers 已创建。"
+    fi
 }
 
-# 提示用户同意条款
-UserLicenseAgreement() {
-	clear
-	echo -e "${gl_kjlan}欢迎使用docker工具箱${gl_bai}"
-	echo -e "----------------------"
-	read -r -p "是否同意以上条款？(y/n): " user_input
+# 执行函数
+setup_shortcut
 
-
-	if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
-		send_stats "许可同意"
-		sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
-		sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
-	else
-		send_stats "许可拒绝"
-		clear
-		exit
-	fi
-}
-
-CheckFirstRun_false
 
 set -eo pipefail
 
