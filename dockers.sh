@@ -49,7 +49,7 @@ yinsiyuanquan2() {
 }
 
 yinsiyuanquan2
-cp -f ./compress.sh /usr/local/bin/dockers > /dev/null 2>&1
+cp -f ./dockers.sh /usr/local/bin/dockers > /dev/null 2>&1
 
 CheckFirstRun_false() {
     if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
