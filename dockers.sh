@@ -190,7 +190,7 @@ run_docker_compose_projects() {
 # 定义卸载函数
 uninstall() {
     if [ -f "/usr/local/bin/dockers" ]; then
-        rm -f "/usr/local/bin/dcokers"
+        rm -f "/usr/local/bin/dockers"
         echo "快捷指令已删除: /usr/local/bin/dockers"
     else
         echo "快捷指令不存在: /usr/local/bin/dockers"
@@ -238,6 +238,7 @@ case $option in
             echo "卸载已取消。"
         fi
         else
+        ;;
     *)
         echo "无效选项，退出脚本。"
         exit 1
