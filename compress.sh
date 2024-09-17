@@ -32,7 +32,7 @@ CheckFirstRun_true() {
 CheckFirstRun_true
 
 yinsiyuanquan1() {
-    if grep -q '^ENABLE_STATS="true"' /usr/local/bin/ > /dev/null 2>&1; then
+    if grep -q '^ENABLE_STATS="true"' /usr/local/bin/yasuo > /dev/null 2>&1; then
         status_message="${gl_lv}正在采集数据${gl_bai}"
     elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
         status_message="${hui}采集已关闭${gl_bai}"
