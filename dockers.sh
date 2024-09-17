@@ -1,5 +1,32 @@
 #!/bin/bash
 
+CheckFirstRun_false() {
+	if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
+		UserLicenseAgreement
+	fi
+}
+
+# 提示用户同意条款
+UserLicenseAgreement() {
+	clear
+	echo -e "${gl_kjlan}欢迎使用docker工具箱${gl_bai}"
+	echo -e "----------------------"
+	read -r -p "是否同意以上条款？(y/n): " user_input
+
+
+	if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+		send_stats "许可同意"
+		sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
+		sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
+	else
+		send_stats "许可拒绝"
+		clear
+		exit
+	fi
+}
+
+CheckFirstRun_false
+
 set -eo pipefail
 
 # 输出错误信息并退出
@@ -109,19 +136,6 @@ run_docker_compose_projects() {
         (cd "$dir" && docker-compose up -d)
     done
 }
-
-setup_shortcut() {
-    local script_path="$(readlink -f "$0")"  # 获取当前脚本的实际路径
-    local link_path="/usr/local/bin/dockers"
-
-    if [ ! -L "$link_path" ] || [ "$(readlink -f "$link_path")" != "$script_path" ]; then
-        ln -sf "$script_path" "$link_path"
-        chmod +x "$link_path"
-        echo "快捷命令 dockers 已创建。"
-    fi
-}
-
-setup_shortcut
 
 echo "请选择操作："
 echo "1. 安装 Docker 和 Docker Compose"
