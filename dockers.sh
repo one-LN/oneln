@@ -209,7 +209,7 @@ echo "1. 安装 Docker 和 Docker Compose"
 echo "2. 卸载 Docker 和 Docker Compose"
 echo "3. 扫描并运行 Docker Compose 项目"
 echo "4. 退出"
-echo "5. 卸载脚本"
+echo "5. 卸载"
 read -p "输入选项编号: " option
 
 case $option in
