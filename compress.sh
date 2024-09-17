@@ -190,6 +190,24 @@ check_tool() {
     fi
 }
 
+# 定义卸载函数
+uninstall() {
+    if [ -f "/usr/local/bin/yasuo" ]; then
+        rm -f "/usr/local/bin/yasuo"
+        echo "快捷指令已删除: /usr/local/bin/yasuo"
+    else
+        echo "快捷指令不存在: /usr/local/bin/yasuo"
+    fi
+
+    if [ -f "./compress.sh" ]; then
+        rm -f "./compress.sh"
+        echo "原始脚本已删除: ./compress.sh"
+    else
+        echo "原始脚本不存在: ./compress.sh"
+    fi
+}
+
+
 # 检查所需工具
 check_tool "zip"
 check_tool "unzip"
@@ -202,6 +220,8 @@ check_tool "tar"
 echo "请选择操作类型:"
 echo "1. 压缩"
 echo "2. 解压"
+echo "3. 退出"
+echo "4. 卸载"
 
 read -p "请输入选项号: " op_type
 
@@ -367,5 +387,18 @@ case $op_type in
             *) echo "无效选项，解压失败!"; exit 1 ;;
         esac
     ;;
+    4)
+        echo "退出脚本。"
+        exit 0
+    ;;
+    5)
+        read -r -p "您确定要卸载脚本和快捷指令吗？(y/n): " user_input
+        if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+            uninstall
+            echo "卸载完成。"
+        else
+            echo "卸载已取消。"
+        fi
+        ;;    
     *) echo "无效选项，程序退出."; exit 1 ;;
 esac
