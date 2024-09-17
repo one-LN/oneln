@@ -1,18 +1,80 @@
 #!/bin/bash
 
-setup_shortcut() {
-    local script_path="$(readlink -f "$0")"
-    local link_path="/usr/local/bin/dockers"
-
-    if [ ! -L "$link_path" ] || [ "$(readlink -f "$link_path")" != "$script_path" ]; then
-        ln -sf "$script_path" "$link_path"
-        chmod +x "$link_path"
-        echo "快捷命令 dockers 已创建。"
+country="default"
+cn_yuan() {
+    if [ "$country" = "CN" ]; then
+        zhushi=0
+        gh_proxy="https://gh.kejilion.pro/"
+    else
+        zhushi=1  # 0 表示执行，1 表示不执行
+        gh_proxy=""
     fi
 }
 
-# 执行函数
-setup_shortcut
+cn_yuan
+
+# 定义一个函数来执行命令
+run_command() {
+    if [ "$zhushi" -eq 0 ]; then
+        "$@"
+    fi
+}
+
+permission_granted="true"
+
+CheckFirstRun_true() {
+    if grep -q '^permission_granted="true"' /usr/local/bin/dockers > /dev/null 2>&1; then
+        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
+        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
+    fi
+}
+
+CheckFirstRun_true
+
+yinsiyuanquan1() {
+    if grep -q '^ENABLE_STATS="true"' /usr/local/bin/dockers > /dev/null 2>&1; then
+        status_message="${gl_lv}正在采集数据${gl_bai}"
+    elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
+        status_message="${hui}采集已关闭${gl_bai}"
+    else
+        status_message="无法确定的状态"
+    fi
+}
+
+yinsiyuanquan2() {
+    if grep -q '^ENABLE_STATS="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
+        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' ./dockers.sh
+        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' /usr/local/bin/dockers
+    fi
+}
+
+yinsiyuanquan2
+cp -f ./compress.sh /usr/local/bin/dockers > /dev/null 2>&1
+
+CheckFirstRun_false() {
+    if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
+        UserLicenseAgreement
+    fi
+}
+
+# 提示用户同意条款
+UserLicenseAgreement() {
+    clear
+    echo -e "${gl_kjlan}欢迎使用 docker 脚本工具箱${gl_bai}"
+    echo -e "----------------------"
+    read -r -p "是否同意以上条款？(y/n): " user_input
+
+    if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
+        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
+    else
+        clear
+        exit
+    fi
+}
+
+CheckFirstRun_false
+
 
 
 set -eo pipefail
