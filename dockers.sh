@@ -187,12 +187,29 @@ run_docker_compose_projects() {
     done
 }
 
+# 定义卸载函数
+uninstall() {
+    if [ -f "/usr/local/bin/dockers" ]; then
+        rm -f "/usr/local/bin/dcokers"
+        echo "快捷指令已删除: /usr/local/bin/dockers"
+    else
+        echo "快捷指令不存在: /usr/local/bin/dockers"
+    fi
+
+    if [ -f "./dockers.sh" ]; then
+        rm -f "./dockers.sh"
+        echo "原始脚本已删除: ./dockers.sh"
+    else
+        echo "原始脚本不存在: ./dockers.sh"
+    fi
+}
+
 echo "请选择操作："
 echo "1. 安装 Docker 和 Docker Compose"
 echo "2. 卸载 Docker 和 Docker Compose"
 echo "3. 扫描并运行 Docker Compose 项目"
 echo "4. 退出"
-
+echo "5. 卸载脚本"
 read -p "输入选项编号: " option
 
 case $option in
@@ -211,6 +228,16 @@ case $option in
         echo "退出脚本。"
         exit 0
         ;;
+    5)
+    elif [ "$choice" = "5" ]; then
+    read -r -p "您确定要卸载脚本和快捷指令吗？(y/n): " user_input
+    if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+        uninstall
+        echo "卸载完成。"
+    else
+        echo "卸载已取消。"
+    fi
+    else
     *)
         echo "无效选项，退出脚本。"
         exit 1
