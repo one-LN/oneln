@@ -11,6 +11,9 @@ setup_shortcut() {
     fi
 }
 
+# 执行函数
+setup_shortcut
+
 install_build_tools() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
