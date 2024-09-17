@@ -114,26 +114,14 @@ setup_shortcut() {
     local script_path="$(readlink -f "$0")"  # 获取当前脚本的实际路径
     local link_path="/usr/local/bin/dockers"
 
-    if [ -L "$link_path" ]; then
-        local existing_target=$(readlink -f "$link_path")
-        if [ "$script_path" = "$existing_target" ]; then
-            if [[ "$(basename "$0")" == "$(basename "$script_path")" ]]; then
-                echo "快捷命令已正确设置并且是最新的。"
-            fi
-        else
-            echo "更新快捷命令..."
-            ln -sf "$script_path" "$link_path"
-            chmod +x "$link_path"
-            echo "快捷命令 dockers 已更新。"
-        fi
-    elif [ -e "$link_path" ]; then
-        echo "已存在名为 dockers 的文件，但不是快捷方式。请检查并手动处理。"
-    else
-        ln -s "$script_path" "$link_path"
+    if [ ! -L "$link_path" ] || [ "$(readlink -f "$link_path")" != "$script_path" ]; then
+        ln -sf "$script_path" "$link_path"
         chmod +x "$link_path"
-        echo "快捷命令 dockers 已设置。"
+        echo "快捷命令 dockers 已创建。"
     fi
 }
+
+setup_shortcut
 
 echo "请选择操作："
 echo "1. 安装 Docker 和 Docker Compose"
@@ -165,4 +153,4 @@ case $option in
         ;;
 esac
 
-setup_shortcut
+
