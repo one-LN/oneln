@@ -229,15 +229,15 @@ case $option in
         exit 0
         ;;
     5)
-    elif [ "$choice" = "5" ]; then
-    read -r -p "您确定要卸载脚本和快捷指令吗？(y/n): " user_input
-    if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
-        uninstall
-        echo "卸载完成。"
-    else
-        echo "卸载已取消。"
-    fi
-    else
+        elif [ "$choice" = "5" ]; then
+        read -r -p "您确定要卸载脚本和快捷指令吗？(y/n): " user_input
+        if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+            uninstall
+            echo "卸载完成。"
+        else
+            echo "卸载已取消。"
+        fi
+        else
     *)
         echo "无效选项，退出脚本。"
         exit 1
