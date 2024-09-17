@@ -229,7 +229,6 @@ case $option in
         exit 0
         ;;
     5)
-        elif [ "$choice" = "5" ]; then
         read -r -p "您确定要卸载脚本和快捷指令吗？(y/n): " user_input
         if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
             uninstall
