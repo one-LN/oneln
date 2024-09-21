@@ -222,25 +222,51 @@ check_tool "tar"
 scan_and_select_files() {
     echo "当前目录下的文件和文件夹："
     local files=(*)
-    
+
     if [ ${#files[@]} -eq 0 ]; then
         echo "提示：当前目录没有文件或文件夹！"
         return
     fi
 
-    # 列出文件和文件夹及其大小
+    # 列出文件和文件夹及其大小和类型，并添加“返回上级目录”选项
+    echo "0. 返回上级目录"
     for i in "${!files[@]}"; do
         size=$(du -sh "${files[$i]}" | cut -f1)  # 获取大小
-        echo "$((i + 1)). ${files[$i]} - $size"
+        if [ -d "${files[$i]}" ]; then
+            file_type="文件夹"
+        elif [[ "${files[$i]}" == *.zip || "${files[$i]}" == *.rar || "${files[$i]}" == *.7z || "${files[$i]}" == *.tar || "${files[$i]}" == *.tar.gz || "${files[$i]}" == *.tar.bz2 || "${files[$i]}" == *.tar.xz ]]; then
+            file_type="压缩文件"
+        else
+            file_type="文件"
+        fi
+        echo "$((i + 1)). ${files[$i]} - $size [$file_type]"
     done
 
     # 选择文件或文件夹
-    read -p "请选择要压缩的文件或文件夹的序号（支持多个，以空格分隔）: " -a choices
+    read -p "请选择序号（单个文件夹会提示是否进入文件夹，支持多个，以空格分隔）: " -a choices
+    if [[ " ${choices[@]} " =~ " 0 " ]]; then
+        cd ..
+        scan_and_select_files
+        return
+    fi
+
     for choice in "${choices[@]}"; do
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -gt 0 ] && [ "$choice" -le "${#files[@]}" ]; then
             selected_file="${files[$((choice - 1))]}"
-            echo "您选择了: $selected_file"
-            files_to_compress+=("$selected_file")
+            if [[ -d "$selected_file" && ${#choices[@]} -eq 1 ]]; then
+                read -p "您选择了一个文件夹 [$selected_file]，要进入该文件夹吗？(y/n) " enter_folder
+                if [[ "$enter_folder" =~ ^[yY]$ ]]; then
+                    cd "$selected_file"
+                    scan_and_select_files
+                    return
+                else
+                    echo "您选择了: $selected_file"
+                    files_to_compress+=("$selected_file")
+                fi
+            else
+                echo "您选择了: $selected_file"
+                files_to_compress+=("$selected_file")
+            fi
         else
             echo "无效选择: $choice，请重新选择！"
         fi
@@ -316,17 +342,23 @@ scan_and_select_files() {
 # 列出压缩文件供用户选择解压
 list_and_select_compressed_files() {
     echo "当前目录下的压缩文件："
-    local compressed_files=(*.zip *.rar *.7z)  # 只获取压缩文件
+    local compressed_files=()
+    for ext in zip rar 7z tar tar.gz tar.bz2 tar.xz; do
+        for file in *."$ext"; do
+            [ -e "$file" ] && compressed_files+=("$file")
+        done
+    done
 
     if [ ${#compressed_files[@]} -eq 0 ]; then
         echo "提示：当前目录没有压缩文件！"
         return
     fi
 
-    # 列出压缩文件及其完整路径
+    # 列出压缩文件及其大小和完整路径
     for i in "${!compressed_files[@]}"; do
+        size=$(du -sh "${compressed_files[$i]}" | cut -f1)  # 获取大小
         full_path="$(pwd)/${compressed_files[$i]}"
-        echo "$((i + 1)). $full_path"
+        echo "$((i + 1)). $full_path - $size [压缩文件]"
     done
 
     read -p "请选择要解压的文件的序号（支持多个，以空格分隔）: " -a decompress_choices
