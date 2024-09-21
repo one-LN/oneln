@@ -341,27 +341,26 @@ scan_and_select_files() {
 
 # 列出压缩文件供用户选择解压
 list_and_select_compressed_files() {
-    echo "当前目录下的压缩文件："
+    echo "当前目录及其子目录下的压缩文件："
     local compressed_files=()
-    for ext in zip rar 7z tar tar.gz tar.bz2 tar.xz; do
-        for file in *."$ext"; do
-            [ -e "$file" ] && compressed_files+=("$file")
-        done
-    done
+    while IFS= read -r -d '' file; do
+        compressed_files+=("$file")
+    done < <(find . -type f \( -iname "*.zip" -o -iname "*.rar" -o -iname "*.7z" -o -iname "*.tar" -o -iname "*.tar.gz" -o -iname "*.tar.bz2" -o -iname "*.tar.xz" \) -print0)
 
     if [ ${#compressed_files[@]} -eq 0 ]; then
-        echo "提示：当前目录没有压缩文件！"
+        echo "提示：当前目录及其子目录没有压缩文件！"
         return
     fi
 
     # 列出压缩文件及其大小和完整路径
     for i in "${!compressed_files[@]}"; do
         size=$(du -sh "${compressed_files[$i]}" | cut -f1)  # 获取大小
-        full_path="$(pwd)/${compressed_files[$i]}"
+        full_path="$(cd "$(dirname "${compressed_files[$i]}")" && pwd)/$(basename "${compressed_files[$i]}")"
         echo "$((i + 1)). $full_path - $size [压缩文件]"
     done
 
     read -p "请选择要解压的文件的序号（支持多个，以空格分隔）: " -a decompress_choices
+    # 检查用户选择的每个文件序号是否有效
     for choice in "${decompress_choices[@]}"; do
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -gt 0 ] && [ "$choice" -le "${#compressed_files[@]}" ]; then
             selected_file="${compressed_files[$((choice - 1))]}"
@@ -369,6 +368,7 @@ list_and_select_compressed_files() {
             files_to_decompress+=("$selected_file")
         else
             echo "无效选择: $choice，请重新选择！"
+            return
         fi
     done
 
