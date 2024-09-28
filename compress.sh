@@ -36,18 +36,18 @@ update_permission_status() {
 
 # 检查首次运行
 check_first_run_true() {
-    update_permission_status /usr/local/bin/yasuo "false" "true"
+    update_permission_status /usr/local/bin/c "false" "true"
     update_permission_status ./compress.sh "false" "true"
 }
 
 check_first_run_true
 
 # 复制文件
-cp -f ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
+cp -f ./compress.sh /usr/local/bin/c > /dev/null 2>&1
 
 # 检查是否需要用户同意条款
 check_first_run_false() {
-    if grep -q '^permission_granted="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
+    if grep -q '^permission_granted="false"' /usr/local/bin/c > /dev/null 2>&1; then
         user_license_agreement
     fi
 }
@@ -56,12 +56,12 @@ check_first_run_false() {
 user_license_agreement() {
     clear
     echo -e "欢迎使用压缩脚本工具箱"
-    echo -e "快捷指令：yasuo"
+    echo -e "快捷指令：c"
     echo -e "----------------------"
     read -r -p "是否同意以上条款？(y/n): " user_input
     if [[ "$user_input" =~ ^[Yy]$ ]]; then
         update_permission_status ./compress.sh "false" "true"
-        update_permission_status /usr/local/bin/yasuo "false" "true"
+        update_permission_status /usr/local/bin/c "false" "true"
     else
         clear
         exit
@@ -185,11 +185,11 @@ check_tool() {
 
 # 定义卸载函数
 uninstall() {
-    if [ -f "/usr/local/bin/yasuo" ]; then
-        rm -f "/usr/local/bin/yasuo"
-        echo "快捷指令已删除: /usr/local/bin/yasuo"
+    if [ -f "/usr/local/bin/c" ]; then
+        rm -f "/usr/local/bin/c"
+        echo "快捷指令已删除: /usr/local/bin/c"
     else
-        echo "快捷指令不存在: /usr/local/bin/yasuo"
+        echo "快捷指令不存在: /usr/local/bin/c"
     fi
 
     if [ -f "./compress.sh" ]; then
