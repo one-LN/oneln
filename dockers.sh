@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# 默认国家设置
 country="default"
-cn_yuan() {
+
+# 判断国家设置
+set_country_proxy() {
     if [ "$country" = "CN" ]; then
         zhushi=0
         gh_proxy="https://gh.kejilion.pro/"
@@ -11,7 +14,7 @@ cn_yuan() {
     fi
 }
 
-cn_yuan
+set_country_proxy
 
 # 定义一个函数来执行命令
 run_command() {
@@ -20,61 +23,52 @@ run_command() {
     fi
 }
 
-permission_granted="true"
-
-CheckFirstRun_true() {
-    if grep -q '^permission_granted="true"' /usr/local/bin/dockers > /dev/null 2>&1; then
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
+# 权限许可检查函数
+update_permission_status() {
+    local status_file="$1"
+    local current_status="$2"
+    local new_status="$3"
+    
+    if grep -q "^permission_granted=\"$current_status\"" "$status_file" > /dev/null 2>&1; then
+        sed -i "s/^permission_granted=\"$current_status\"/permission_granted=\"$new_status\"/" "$status_file"
     fi
 }
 
-CheckFirstRun_true
-
-yinsiyuanquan1() {
-    if grep -q '^ENABLE_STATS="true"' /usr/local/bin/dockers > /dev/null 2>&1; then
-        status_message="${gl_lv}正在采集数据${gl_bai}"
-    elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
-        status_message="${hui}采集已关闭${gl_bai}"
-    else
-        status_message="无法确定的状态"
-    fi
+# 检查首次运行
+check_first_run_true() {
+    update_permission_status /usr/local/bin/dockers "false" "true"
+    update_permission_status ./dockers.sh "false" "true"
 }
 
-yinsiyuanquan2() {
-    if grep -q '^ENABLE_STATS="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
-        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' ./dockers.sh
-        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' /usr/local/bin/dockers
-    fi
-}
+check_first_run_true
 
-yinsiyuanquan2
+# 复制文件
 cp -f ./dockers.sh /usr/local/bin/dockers > /dev/null 2>&1
 
-CheckFirstRun_false() {
+# 检查是否需要用户同意条款
+check_first_run_false() {
     if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
-        UserLicenseAgreement
+        user_license_agreement
     fi
 }
 
 # 提示用户同意条款
-UserLicenseAgreement() {
+user_license_agreement() {
     clear
-    echo -e "${gl_kjlan}欢迎使用 docker 脚本工具箱${gl_bai}"
+    echo -e "欢迎使用压缩脚本工具箱"
+    echo -e "快捷指令：dockers"
     echo -e "----------------------"
     read -r -p "是否同意以上条款？(y/n): " user_input
-
-    if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./dockers.sh
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/dockers
+    if [[ "$user_input" =~ ^[Yy]$ ]]; then
+        update_permission_status ./dockers.sh "false" "true"
+        update_permission_status /usr/local/bin/dockers "false" "true"
     else
         clear
         exit
     fi
 }
 
-CheckFirstRun_false
-
+check_first_run_false
 
 
 set -eo pipefail
