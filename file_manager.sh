@@ -44,7 +44,7 @@ check_first_run_true() {
 check_first_run_true
 
 # 复制文件
-cp -f ./compress.sh /usr/local/bin/w > /dev/null 2>&1
+cp -f ./file_manager.sh /usr/local/bin/w > /dev/null 2>&1
 
 # 检查是否需要用户同意条款
 check_first_run_false() {
