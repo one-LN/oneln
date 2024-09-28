@@ -1,9 +1,10 @@
 #!/bin/bash
 
+# 默认国家设置
 country="default"
 
 # 判断国家设置
-set_country() {
+set_country_proxy() {
     if [ "$country" = "CN" ]; then
         zhushi=0
         gh_proxy="https://gh.kejilion.pro/"
@@ -13,26 +14,40 @@ set_country() {
     fi
 }
 
-set_country
+set_country_proxy
 
 # 定义一个函数来执行命令
 run_command() {
-    [ "$zhushi" -eq 0 ] && "$@"
-}
-
-# 检查首次运行
-check_first_run() {
-    if grep -q '^permission_granted="true"' /usr/local/bin/yasuo; then
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./compress.sh
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/yasuo
+    if [ "$zhushi" -eq 0 ]; then
+        "$@"
     fi
 }
 
-check_first_run
+# 权限许可检查函数
+update_permission_status() {
+    local status_file="$1"
+    local current_status="$2"
+    local new_status="$3"
+    
+    if grep -q "^permission_granted=\"$current_status\"" "$status_file" > /dev/null 2>&1; then
+        sed -i "s/^permission_granted=\"$current_status\"/permission_granted=\"$new_status\"/" "$status_file"
+    fi
+}
 
-# 检查用户许可协议
-check_user_agreement() {
-    if grep -q '^permission_granted="false"' /usr/local/bin/yasuo; then
+# 检查首次运行
+check_first_run_true() {
+    update_permission_status /usr/local/bin/yasuo "false" "true"
+    update_permission_status ./compress.sh "false" "true"
+}
+
+check_first_run_true
+
+# 复制文件
+cp -f ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
+
+# 检查是否需要用户同意条款
+check_first_run_false() {
+    if grep -q '^permission_granted="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
         user_license_agreement
     fi
 }
@@ -40,20 +55,20 @@ check_user_agreement() {
 # 提示用户同意条款
 user_license_agreement() {
     clear
-    echo -e " 欢迎使用压缩脚本工具箱 "
-    echo -e " 快捷指令：yasuo "
+    echo -e "欢迎使用压缩脚本工具箱"
+    echo -e "快捷指令：yasuo"
     echo -e "----------------------"
     read -r -p "是否同意以上条款？(y/n): " user_input
-    if [[ "$user_input" =~ ^[yY]$ ]]; then
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' ./compress.sh
-        sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/yasuo
+    if [[ "$user_input" =~ ^[Yy]$ ]]; then
+        update_permission_status ./compress.sh "false" "true"
+        update_permission_status /usr/local/bin/yasuo "false" "true"
     else
         clear
         exit
     fi
 }
 
-check_user_agreement
+check_first_run_false
 # 安装构建工具
 install_build_tools() {
     if [ -f /etc/os-release ]; then
