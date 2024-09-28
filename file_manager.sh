@@ -602,8 +602,8 @@ EOF
 
 
 			0)  # 退出
-				send_stats "退出"
-				exit 0
+				echo "退出脚本,谢谢使用。"
+                 		exit 0
 				;;
     
 			00)  # 卸载
