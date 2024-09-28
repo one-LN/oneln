@@ -3,7 +3,7 @@
 country="default"
 
 # 判断国家设置
-cn_yuan() {
+set_country() {
     if [ "$country" = "CN" ]; then
         zhushi=0
         gh_proxy="https://gh.kejilion.pro/"
@@ -13,62 +13,38 @@ cn_yuan() {
     fi
 }
 
-cn_yuan
+set_country
 
 # 定义一个函数来执行命令
 run_command() {
-    if [ "$zhushi" -eq 0 ]; then
-        "$@"
-    fi
+    [ "$zhushi" -eq 0 ] && "$@"
 }
 
-permission_granted="true"
-
 # 检查首次运行
-CheckFirstRun_true() {
-    if grep -q '^permission_granted="true"' /usr/local/bin/yasuo > /dev/null 2>&1; then
+check_first_run() {
+    if grep -q '^permission_granted="true"' /usr/local/bin/yasuo; then
         sed -i 's/^permission_granted="false"/permission_granted="true"/' ./compress.sh
         sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/yasuo
     fi
 }
 
-CheckFirstRun_true
+check_first_run
 
-# 数据采集状态
-yinsiyuanquan1() {
-    if grep -q '^ENABLE_STATS="true"' /usr/local/bin/yasuo > /dev/null 2>&1; then
-        status_message="${gl_lv}正在采集数据${gl_bai}"
-    elif grep -q '^ENABLE_STATS="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
-        status_message="${hui}采集已关闭${gl_bai}"
-    else
-        status_message="无法确定的状态"
-    fi
-}
-
-yinsiyuanquan2() {
-    if grep -q '^ENABLE_STATS="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
-        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' ./compress.sh
-        sed -i 's/^ENABLE_STATS="true"/ENABLE_STATS="false"/' /usr/local/bin/yasuo
-    fi
-}
-
-yinsiyuanquan2
-
-cp -f ./compress.sh /usr/local/bin/yasuo > /dev/null 2>&1
-
-CheckFirstRun_false() {
-    if grep -q '^permission_granted="false"' /usr/local/bin/yasuo > /dev/null 2>&1; then
-        UserLicenseAgreement
+# 检查用户许可协议
+check_user_agreement() {
+    if grep -q '^permission_granted="false"' /usr/local/bin/yasuo; then
+        user_license_agreement
     fi
 }
 
 # 提示用户同意条款
-UserLicenseAgreement() {
+user_license_agreement() {
     clear
-    echo -e "${gl_kjlan}欢迎使用压缩脚本工具箱${gl_bai}"
+    echo -e " 欢迎使用压缩脚本工具箱 "
+    echo -e " 快捷指令：yasuo "
     echo -e "----------------------"
     read -r -p "是否同意以上条款？(y/n): " user_input
-    if [ "$user_input" = "y" ] || [ "$user_input" = "Y" ]; then
+    if [[ "$user_input" =~ ^[yY]$ ]]; then
         sed -i 's/^permission_granted="false"/permission_granted="true"/' ./compress.sh
         sed -i 's/^permission_granted="false"/permission_granted="true"/' /usr/local/bin/yasuo
     else
@@ -77,8 +53,7 @@ UserLicenseAgreement() {
     fi
 }
 
-CheckFirstRun_false
-
+check_user_agreement
 # 安装构建工具
 install_build_tools() {
     if [ -f /etc/os-release ]; then
@@ -307,15 +282,17 @@ scan_and_select_files() {
         4) compress_algorithm="tar_gzip" ;;
         5) compress_algorithm="tar_bz2" ;;
         6) compress_algorithm="tar_xz" ;;
-        *) echo "无效选项，默认使用zip"; compress_algorithm="zip" ;;
+        *) echo "无效选项，默认使用7z"; compress_algorithm="7z" ;;
     esac
 
     echo "提示：正在压缩..."
     case $compress_algorithm in
         zip)
+            echo "提示：zip 不支持保留权限，建议使用 7z。"
             zip -rq "${output_file}.zip" "${files_to_compress[@]}"
             ;;
         rar)
+            echo "提示：rar 不支持保留权限，建议使用 7z。"
             rar a "${output_file}.rar" "${files_to_compress[@]}"
             ;;
         7z)
