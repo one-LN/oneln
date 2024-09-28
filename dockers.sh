@@ -36,18 +36,18 @@ update_permission_status() {
 
 # 检查首次运行
 check_first_run_true() {
-    update_permission_status /usr/local/bin/dockers "false" "true"
+    update_permission_status /usr/local/bin/d "false" "true"
     update_permission_status ./dockers.sh "false" "true"
 }
 
 check_first_run_true
 
 # 复制文件
-cp -f ./dockers.sh /usr/local/bin/dockers > /dev/null 2>&1
+cp -f ./dockers.sh /usr/local/bin/d > /dev/null 2>&1
 
 # 检查是否需要用户同意条款
 check_first_run_false() {
-    if grep -q '^permission_granted="false"' /usr/local/bin/dockers > /dev/null 2>&1; then
+    if grep -q '^permission_granted="false"' /usr/local/bin/d > /dev/null 2>&1; then
         user_license_agreement
     fi
 }
@@ -56,12 +56,12 @@ check_first_run_false() {
 user_license_agreement() {
     clear
     echo -e "欢迎使用压缩脚本工具箱"
-    echo -e "快捷指令：dockers"
+    echo -e "快捷指令：d"
     echo -e "----------------------"
     read -r -p "是否同意以上条款？(y/n): " user_input
     if [[ "$user_input" =~ ^[Yy]$ ]]; then
         update_permission_status ./dockers.sh "false" "true"
-        update_permission_status /usr/local/bin/dockers "false" "true"
+        update_permission_status /usr/local/bin/d "false" "true"
     else
         clear
         exit
@@ -183,11 +183,11 @@ run_docker_compose_projects() {
 
 # 定义卸载函数
 uninstall() {
-    if [ -f "/usr/local/bin/dockers" ]; then
-        rm -f "/usr/local/bin/dockers"
-        echo "快捷指令已删除: /usr/local/bin/dockers"
+    if [ -f "/usr/local/bin/d" ]; then
+        rm -f "/usr/local/bin/d"
+        echo "快捷指令已删除: /usr/local/bin/d"
     else
-        echo "快捷指令不存在: /usr/local/bin/dockers"
+        echo "快捷指令不存在: /usr/local/bin/d"
     fi
 
     if [ -f "./dockers.sh" ]; then
