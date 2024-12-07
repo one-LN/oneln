@@ -92,7 +92,7 @@ install_docker() {
         ubuntu|debian)
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
-            apt-get install -y -qq apt-transport-https ca-certificates curl software-properties-common
+            apt-get install -y -qq apt-transport-https ca-certificates curl software-properties-common gnupg2
             curl -fsSL https://download.docker.com/linux/$DISTRO/gpg | apt-key add -
             add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/$DISTRO $(lsb_release -cs) stable"
             apt-get update -qq
@@ -103,7 +103,7 @@ install_docker() {
             ;;
         centos|fedora)
             echo "在 CentOS 或 Fedora 上安装或更新 Docker..."
-            yum install -y -q yum-utils
+            yum install -y -q yum-utils gnupg2
             yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
             yum install -y -q docker-ce docker-ce-cli containerd.io
             systemctl start docker
