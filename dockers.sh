@@ -44,12 +44,13 @@ prompt_user_license() {
     echo "        欢迎使用压缩脚本工具箱 - 快捷指令 d      "
     echo "=============================================="
     read -r -p "请阅读并同意条款，是否同意？(y/n): " input
+
     if [[ "$input" =~ ^[Yy]$ ]]; then
         update_permission_status ./dockers.sh "false" "true"
         update_permission_status /usr/local/bin/d "false" "true"
     else
         echo "未同意条款，脚本退出。"
-        exit 0
+        exit 1
     fi
 }
 
@@ -320,6 +321,7 @@ main() {
     set_country_proxy
     check_and_update_permission
     check_license_agreement
+	prompt_user_license
     detect_os
     show_menu
 }
