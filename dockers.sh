@@ -33,18 +33,25 @@ update_permission_status() {
     fi
 }
 
-check_and_update_permission() {
-    update_permission_status /usr/local/bin/d "false" "true"
-    update_permission_status ./dockers.sh "false" "true"
+check_license_agreement() {
+    # 检查 /usr/local/bin/d 文件中 permission_granted 状态
+    if grep -q '^permission_granted="false"' /usr/local/bin/d 2>/dev/null; then
+        prompt_user_license
+    elif ! grep -q '^permission_granted="true"' /usr/local/bin/d 2>/dev/null; then
+        # 如果没有任何授权状态，默认首次也弹条款
+        prompt_user_license
+    fi
 }
+
 
 prompt_user_license() {
     clear
     echo "=============================================="
-    echo "        欢迎使用压缩脚本工具箱 - 快捷指令 d      "
+    echo "            欢迎使用压缩脚本工具箱              "
     echo "=============================================="
+    echo "请注意：安装后，您可以通过输入快捷指令 'd' 来快速访问本脚本。"
+    echo
     read -r -p "请阅读并同意条款，是否同意？(y/n): " input
-
     if [[ "$input" =~ ^[Yy]$ ]]; then
         update_permission_status ./dockers.sh "false" "true"
         update_permission_status /usr/local/bin/d "false" "true"
@@ -53,6 +60,7 @@ prompt_user_license() {
         exit 1
     fi
 }
+
 
 check_license_agreement() {
     if grep -q '^permission_granted="false"' /usr/local/bin/d 2>/dev/null; then
@@ -321,7 +329,6 @@ main() {
     set_country_proxy
     check_and_update_permission
     check_license_agreement
-	prompt_user_license
     detect_os
     show_menu
 }
