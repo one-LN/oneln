@@ -176,7 +176,7 @@ run_docker_compose_projects() {
 	find "$start_dir" -type f \( -name 'docker-compose.yml' -o -name 'docker-compose.yaml' \) 2>/dev/null | while read -r file; do
 		dir=$(dirname "$file")
 		echo "在目录 $dir 中找到 Docker Compose 文件 $(basename "$file")，运行 Docker Compose 项目..."
-		(cd "$dir" && docker-compose up -d)
+		(cd "$dir" && docker compose up -d)
 	done
 }
 
